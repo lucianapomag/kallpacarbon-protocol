@@ -63,7 +63,7 @@ Core Technology Components
 
 7. Project Links
 
-GitHub Repository Link: [This current repository]
+GitHub Repository Link: [https://github.com/lucianapomag/kallpacarbon-protocol]
 
 Pitch Deck Link: [POR COMPLETAR - Pegar link del PDF de tus diapositivas aquí después]
 
