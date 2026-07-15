@@ -1,33 +1,41 @@
-// ==========================================
-// KALLPACARBON - PROTOCOLO DE PRUEBA COMPLETO
-// ==========================================
+// ===================================================
+// KALLPACARBON PROTOCOL - DAPP SIMULATOR (DEFINITIVO)
+// ===================================================
 
 let userWalletAddress = null;
 
-// Esperar a que cargue la página
+// Esperar a que el HTML cargue por completo
 document.addEventListener("DOMContentLoaded", () => {
-    // Vincular botones a sus funciones con los IDs exactos de tu HTML
+    // 1. Vincular los botones usando los IDs exactos de tus capturas de pantalla
     const connectBtn = document.getElementById("connectWalletBtn");
-    const authorizeBtn = document.querySelector("button[onclick*='autorizar']");
-    const registerBtn = document.querySelector("button[onclick*='registrar']");
-    const consultBtn = document.querySelector("button[onclick*='consultar']");
+    const authorizeBtn = document.getElementById("authorizeBtn");
+    const recordBtn = document.getElementById("recordBtn");
+    const queryBtn = document.getElementById("queryBtn");
 
-    // Asignar los eventos de clic de forma segura
-    if (connectBtn) {
-        connectBtn.addEventListener("click", conectarWallet);
-    }
+    // 2. Asignar las funciones a cada botón al hacer clic
+    if (connectBtn) connectBtn.addEventListener("click", conectarWallet);
+    if (authorizeBtn) authorizeBtn.addEventListener("click", autorizarGenerador);
+    if (recordBtn) recordBtn.addEventListener("click", registrarEnergia);
+    if (queryBtn) queryBtn.addEventListener("click", consultarPlanta);
 });
 
-// 1. FUNCIÓN: Conectar MetaMask (Real + Respaldo de Simulación)
+// Función auxiliar para escribir en el cuadro de "Log de Transacciones Web3"
+function actualizarLog(mensaje) {
+    const logText = document.getElementById("statusLog");
+    if (logText) {
+        logText.innerText = mensaje;
+    }
+}
+
+// 1. FUNCIÓN: Conectar MetaMask
 async function conectarWallet() {
     const boton = document.getElementById("connectWalletBtn");
     const estado = document.getElementById("walletAddressText");
     
-    if (boton) {
-        boton.innerText = "Conectando...";
-    }
+    if (boton) boton.innerText = "Conectando...";
+    actualizarLog("⏳ Solicitando acceso a MetaMask...");
 
-    // Intentar conexión real con MetaMask
+    // Conexión real si el usuario tiene MetaMask configurado
     if (typeof window.ethereum !== 'undefined') {
         try {
             const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
@@ -40,14 +48,15 @@ async function conectarWallet() {
             if (estado) {
                 estado.innerText = "Estado: Conectado (" + userWalletAddress.substring(0, 6) + "..." + userWalletAddress.substring(38) + ")";
             }
+            actualizarLog("✔ Conectado a la Wallet: " + userWalletAddress);
             alert("🔌 ¡MetaMask conectado exitosamente!");
             return;
         } catch (error) {
-            console.log("Conexión cancelada por el usuario. Usando simulación.");
+            actualizarLog("❌ Conexión rechazada por el usuario. Iniciando Modo Demo...");
         }
     }
 
-    // Respaldo de simulación si no se completa la conexión real
+    // Respaldo simulado si no desea interactuar con la extensión en vivo
     setTimeout(() => {
         userWalletAddress = "0x7DBC963feD819620DC2a50283502b80D174E9Da";
         if (boton) {
@@ -55,94 +64,84 @@ async function conectarWallet() {
             boton.style.backgroundColor = "#2ecc71";
         }
         if (estado) {
-            estado.innerText = "Estado: Conectado (Demo: " + userWalletAddress.substring(0, 6) + "..." + userWalletAddress.substring(34) + ")";
+            estado.innerText = "Estado: Conectado (" + userWalletAddress.substring(0, 6) + "..." + userWalletAddress.substring(34) + ")";
         }
-        alert("🔌 ¡MetaMask conectado exitosamente a LACNet (Modo Demo)!");
+        actualizarLog("✔ Conectado exitosamente a la red de prueba (LACNet) con Wallet Simulada.");
+        alert("🔌 ¡MetaMask conectado exitosamente (Modo Demo)!");
     }, 1200);
 }
 
-// 2. FUNCIÓN: Autorizar Generador en la Blockchain (MINEM / COES)
+// 2. FUNCIÓN: Autorizar Generador (MINEM / COES)
 function autorizarGenerador() {
-    const walletInput = document.querySelector("input[placeholder='0x...']");
-    const nombreInput = document.querySelector("input[placeholder='Ej. Central Eólica Tres Hermanas']");
-    const tecnologiaSelect = document.querySelector("select");
-
-    const wallet = walletInput ? walletInput.value.trim() : "";
-    const nombre = nombreInput ? nombreInput.value.trim() : "";
-    const tecnologia = tecnologiaSelect ? tecnologiaSelect.value : "";
-
     if (!userWalletAddress) {
-        alert("⚠️ Primero debes conectar tu MetaMask arriba.");
+        alert("⚠️ Primero debes hacer clic en 'Conectar MetaMask' arriba.");
         return;
     }
 
-    if (!wallet || !nombre) {
-        alert("⚠️ Por favor, completa la dirección de la wallet y el nombre de la planta.");
+    const addressInput = document.getElementById("regAddress").value.trim();
+    const nameInput = document.getElementById("regName").value.trim();
+    const typeSelect = document.getElementById("regType").value;
+
+    if (!addressInput || !nameInput) {
+        alert("⚠️ Por favor, completa la dirección del generador y el nombre de la planta.");
         return;
     }
 
-    alert(`⏳ Enviando transacción a LACNet para autorizar la planta:\n"${nombre}" (${tecnologia})`);
+    actualizarLog(`⏳ Enviando Smart Contract transaction para autorizar planta RER: ${nameInput}...`);
 
     setTimeout(() => {
-        alert(
-            `🎉 ¡Planta RER Autorizada Exitosamente!\n\n` +
-            `• Transacción: 0x8a92...bf54\n` +
-            `• Operador: MINEM / COES\n` +
-            `• Estado: Smart Contract actualizado en Blockchain.`
-        );
+        actualizarLog(`✔ Transacción confirmada: 0x4a8f91b... [Planta ${nameInput} registrada en Blockchain]`);
+        alert(`🎉 ¡Planta RER Autorizada con éxito en el protocolo!\n\nTecnología: ${typeSelect}\nWallet asignada: ${addressInput}`);
     }, 1500);
 }
 
-// 3. FUNCIÓN: Registrar Energía y Calcular Mitigación de CO2
+// 3. FUNCIÓN: Registrar Energía Generada (MWh)
 function registrarEnergia() {
-    const kwhInput = document.querySelector("input[placeholder='Ej. 100']");
-    const kwh = kwhInput ? parseFloat(kwhInput.value) : 0;
-
     if (!userWalletAddress) {
         alert("⚠️ Primero debes conectar tu MetaMask.");
         return;
     }
 
-    if (!kwh || kwh <= 0) {
-        alert("⚠️ Ingresa un valor de energía válido y mayor a cero.");
+    const mwhValue = parseFloat(document.getElementById("mwhInput").value);
+
+    if (!mwhValue || mwhValue <= 0) {
+        alert("⚠️ Ingresa un número válido de Megavatios-hora (MWh) inyectados.");
         return;
     }
 
-    // Factor oficial del SEIN (0.40 kg CO2 / kWh o 0.40 tCO2 / MWh)
-    const factorEmision = 0.40;
-    const co2Evitado = (kwh * factorEmision).toFixed(2);
-
-    alert(`⏳ Procesando inyección de ${kwh} MWh y acuñando atributos ambientales...`);
+    actualizarLog(`⏳ Registrando inyección de ${mwhValue} MWh y calculando huella evitada...`);
 
     setTimeout(() => {
-        alert(
-            `🎉 ¡Transacción Confirmada!\n\n` +
-            `• Bloque: #920412\n` +
-            `• Energía Inyectada: ${kwh} MWh\n` +
-            `• Mitigación Registrada: ${co2Evitado} tCO₂ evitados (Tokenizadas con éxito).`
-        );
-    }, 2000);
+        // Factor de emisión típico del SEIN en Perú: 0.40 tCO2 / MWh
+        const factorEmision = 0.40; 
+        const co2Mitigado = (mwhValue * factorEmision).toFixed(2);
+
+        actualizarLog(`✔ Bloque acuñado con éxito. Minted Token de Carbono por ${co2Mitigado} tCO2eq.`);
+        alert(`🎉 ¡Energía Registrada On-Chain!\n\nMWh Inyectados: ${mwhValue} MWh\nCO₂ Mitigado: ${co2Mitigado} Toneladas de CO₂ evitadas.`);
+    }, 1800);
 }
 
-// 4. FUNCIÓN: Consultar los Datos de la Planta en el Smart Contract
+// 4. FUNCIÓN: Consultar Planta Registrada
 function consultarPlanta() {
-    const consultaInput = document.querySelector("#adminSection + .card input") || document.querySelectorAll("input")[3];
-    const walletConsultar = consultaInput ? consultaInput.value.trim() : "";
+    const queryAddress = document.getElementById("queryAddress").value.trim();
+    const displaySection = document.getElementById("metricsDisplay");
 
-    if (!walletConsultar) {
-        alert("⚠️ Por favor, ingresa la dirección de la planta que deseas consultar.");
+    if (!queryAddress) {
+        alert("⚠️ Por favor, introduce la dirección de la planta para realizar la búsqueda.");
         return;
     }
 
-    alert(`🔍 Consultando datos on-chain para la wallet:\n${walletConsultar}...`);
+    actualizarLog(`🔍 Llamando función de lectura en el Smart Contract para: ${queryAddress}...`);
 
     setTimeout(() => {
-        alert(
-            `📊 Resultados del Smart Contract:\n\n` +
-            `• Planta RER: Central Eólica 3 Hermanas\n` +
-            `• Estado: Activa y Autorizada\n` +
-            `• Energía Total Registrada: 4,250 MWh\n` +
-            `• Emisiones Evitadas Totales: 1,700 tCO₂`
-        );
+        // Mostrar la cajita de resultados ocultos cambiando el style
+        if (displaySection) displaySection.style.display = "block";
+
+        document.getElementById("metricName").innerText = "Central Eólica Tres Hermanas";
+        document.getElementById("metricType").innerText = "Eólica 🍃";
+        document.getElementById("metricMWh").innerText = "2,500";
+        document.getElementById("metricCO2").innerText = "1,000";
+
+        actualizarLog("✔ Consulta finalizada. Datos recuperados del estado global de la Blockchain.");
     }, 1000);
 }
